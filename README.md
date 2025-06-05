@@ -1,70 +1,61 @@
+🚗 API Lavacar - Guia de Instalação
 ✅ Pré-requisitos
-Git instalado para clonar o repositório
+Ter o Git instalado para clonar o repositório.
 
-Java (JDK 17 ou superior)
+Ter o Java (JDK 17 ou superior) instalado.
 
-Maven instalado
+Ter o Maven instalado.
 
-VS Code (ou outro IDE) com as seguintes extensões:
+Usar uma IDE como Visual Studio Code ou similar.
 
-🔧 Extensões recomendadas:
-Extension Pack for Java
+🔧 Extensões necessárias na IDE:
+"Extension Pack for Java"
 
-Extension Pack for Java Auto Config
+"Extension Pack for Java Auto Config"
 
-Lombok Annotations Support
+"Lombok Annotations Support"
 
-Maven for Java
+"Maven for Java"
 
-Spring Boot Extension Pack
+"Spring Boot Extension Pack"
 
-🚀 Como rodar a aplicação
-1️⃣ Clone o repositório:
-bash
-Copiar
-Editar
-git clone <url-do-repositorio>
-2️⃣ (Opcional) Configure o banco H2:
-Acesse o arquivo:
-/src/main/resources/application.properties
+🚀 Passos para rodar a aplicação
+Clone o repositório em sua máquina.
 
-Altere, se desejar, o username e password do H2.
+Abra o projeto na sua IDE.
 
-3️⃣ Inicie o backend:
-Execute no terminal:
+Acesse o arquivo application.properties, localizado na pasta src/main/resources.
 
-bash
-Copiar
-Editar
-mvn clean spring-boot:run
-4️⃣ Acesse o console do banco H2:
-Acesse no navegador:
-http://localhost:8080/h2-console
+Se desejar, altere o usuário e a senha do banco H2 diretamente nesse arquivo.
 
-Utilize o username e password configurados no application.properties.
+Execute o projeto com a opção de rodar projetos Spring Boot da sua IDE ou utilizando Maven.
 
-🔑 Gerar senha com BCrypt
-Para cadastrar um usuário no sistema:
+Acesse o console do H2 através do navegador no endereço "http://localhost:8080/h2-console".
 
-Rode a classe:
-/src/main/java/dev/ApiLavacar/Nego/GeneratePassword.java
+Preencha os campos de conexão utilizando o usuário e senha configurados no arquivo application.properties.
 
-Insira a senha desejada para gerar o hash BCrypt.
+🔑 Gerando usuário e senha no banco
+No projeto, abra a classe chamada "GeneratePassword", que está localizada em "src/main/java/dev/ApiLavacar/Nego".
 
-No console do H2, execute:
+Execute essa classe, insira sua senha no terminal, e copie a senha gerada, que estará criptografada com BCrypt.
 
-sql
-Copiar
-Editar
-INSERT INTO OWNERS (username, password) VALUES ('seuUsername', 'senhaGeradaComBCrypt');
-🌐 Frontend
-Abra o arquivo:
-/src/main/resources/static/login.html
+Acesse o console do H2 e insira o seguinte comando no campo de execução:
+"INSERT INTO OWNERS (username, password) VALUES ('seuUsername', 'suaSenhaCriptografada')".
 
-Faça login utilizando seu username e senha normal (não criptografada — a API valida internamente via BCrypt).
+Substitua 'seuUsername' pelo nome de usuário que deseja usar e 'suaSenhaCriptografada' pela senha gerada no passo anterior.
 
-💡 Observações
-O backend roda em Spring Boot com banco em memória H2.
+🌐 Acessando o frontend
+No projeto, acesse a pasta "src/main/resources/static".
 
-O frontend é uma página simples em HTML localizada dentro da própria aplicação, na pasta static.
+Abra o arquivo "login.html" diretamente no seu navegador.
 
+No formulário de login, preencha com seu "username" e a "senha normal" (sem criptografia — a verificação é feita pela API).
+
+💡 Observações importantes
+O backend foi desenvolvido com Spring Boot, utilizando o banco em memória H2.
+
+O frontend é uma página HTML simples que se conecta diretamente com a API.
+
+O cadastro de novos usuários deve ser feito manualmente no banco, utilizando o console do H2 e o comando SQL em formato "INSERT INTO OWNERS (username, password) VALUES ('usuario', 'senhaCriptografada')".
+
+As configurações do banco podem ser alteradas facilmente no arquivo application.properties.
