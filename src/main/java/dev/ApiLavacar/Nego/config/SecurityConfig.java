@@ -34,22 +34,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable()) // Desabilita CSRF (já feito)
+                .cors(cors -> corsConfigurationSource())
+                .csrf(csrf -> csrf.disable()) // Desabilita CSRF para API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/owner/login",
-                                "/wash/schedule",
-                                "/h2-console/**" // 👈 Libera o console H2
-                        ).permitAll()
+                        .requestMatchers("/owner/login").permitAll() // Libera login
+                        .requestMatchers("/wash/schedule").permitAll()// Protege endpoints /owner/**
                         .requestMatchers("/owner/**").authenticated()
-                        .anyRequest().permitAll())
-                .headers(headers -> headers
-                        .frameOptions().disable() // 👈 Necessário para o console H2 (usa iframes)
+                        .anyRequest().permitAll() // Libera o restante
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless, sem sessão
+                .authenticationProvider(authenticationProvider()) // Define o provider
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class); // Adiciona o filtro JWT
 
         return http.build();
     }
