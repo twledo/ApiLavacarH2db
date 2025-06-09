@@ -74,6 +74,8 @@
 
   <script>
     const API_URL = 'http://localhost:8080';
+    let availableHours = [];
+
 
     async function loadServices() {
       try {
@@ -103,8 +105,9 @@
         if (!res.ok) throw new Error('Erro ao carregar horários');
         const data = await res.json();
 
+        availableHours = data; // salvar todos os objetos com ID e hour
+
         data.forEach(h => {
-          // Aqui pegamos os 5 primeiros caracteres, HH:mm
           const time = h.hour.slice(0, 5);
           const opt = document.createElement('option');
           opt.value = time;
@@ -115,6 +118,7 @@
         alert(e.message);
       }
     }
+
 
     async function schedule() {
       const nameClient = document.getElementById('clientName').value.trim();
@@ -135,15 +139,23 @@
         return;
       }
 
-      const dateTimeString = washDate + "T" + washHour.padStart(2, '0') + ":00";
+      // Busca o ID da hora selecionada
+      const selectedHour = availableHours.find(h => h.hour.slice(0, 5) === washHour);
+      if (!selectedHour) {
+        msg.style.color = 'red';
+        msg.textContent = 'Horário inválido selecionado.';
+        return;
+      }
 
       const scheduleDTO = {
         nameClient,
         phone,
         modelCar,
-        dateTime: dateTimeString,
+        date: washDate,
+        hourDTO: { id: selectedHour.id },
         descriptionService,
-        jobWash: { id: Number(jobWashId) }  // <-- Alteração importante
+        active: true,
+        jobWash: { id: Number(jobWashId) }
       };
 
       console.log('Payload enviado:', JSON.stringify(scheduleDTO));
@@ -178,8 +190,6 @@
         console.error(error);
       }
     }
-
-
 
     // Chamar as funções quando a página carregar
     window.onload = () => {

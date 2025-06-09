@@ -80,6 +80,9 @@
 
     <h2>Agendamentos</h2>
     <div id="scheduled-list"></div>
+    <h4>Horários Disponíveis</h4>
+    <ul id="hours-list"></ul>
+
 
     <button onclick="logout()">Sair</button>
   </div>
@@ -209,20 +212,63 @@
     // === AGENDAMENTOS REALIZADOS ===
     // =============================
 
-    async function listScheduled() {
+    async function loadScheduleAndHours() {
       try {
-        const res = await fetch(`${API_URL}/owner/getWashes`, {
+        // Buscar horários disponíveis
+        const resHours = await fetch(`${API_URL}/public/getHours`);
+        console.log('[GET] /getHours status:', resHours.status);
+        if (!resHours.ok) throw new Error('Erro ao carregar horários');
+        const hoursData = await resHours.json();
+        console.log('[GET] /getHours data:', hoursData);
+
+        const hoursList = document.getElementById('hours-list');
+        hoursList.innerHTML = '';
+        hoursData.forEach(item => {
+          console.log('Horário disponível:', item.hour);
+          const li = document.createElement('li');
+          li.textContent = item.hour;
+          hoursList.appendChild(li);
+        });
+
+        // Buscar agendamentos realizados
+        const resSchedules = await fetch(`${API_URL}/owner/getWashes`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error('Erro ao carregar agendamentos');
-        const schedules = await res.json();
+        console.log('[GET] /getWashes status:', resSchedules.status);
+        if (!resSchedules.ok) throw new Error('Erro ao carregar agendamentos');
+        const schedules = await resSchedules.json();
+        console.log('[GET] /getWashes data:', schedules);
 
         const container = document.getElementById('scheduled-list');
         container.innerHTML = '';
-        schedules.forEach(s => {
-          const dt = new Date(s.dateTime);
-          const date = dt.toLocaleDateString('pt-BR');
-          const hour = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        schedules.forEach((s, index) => {
+          console.log(`\nAgendamento [${index}]:`, s);
+
+          let dt = null;
+          const rawDate = s.date;
+          const rawHour = s.hourDTO?.hour;
+
+          if (rawDate && rawHour) {
+            console.log('→ Data bruta:', rawDate);
+            console.log('→ Hora bruta:', rawHour);
+
+            const [year, month, day] = rawDate.split('-').map(Number);
+            const [hour, minute] = rawHour.split(':').map(Number); // removi `second` pq seu valor é "12:00" sem segundos
+
+            console.log('→ Date parts:', { year, month, day });
+            console.log('→ Time parts:', { hour, minute });
+
+            dt = new Date(year, month - 1, day, hour, minute);
+            console.log('→ Objeto Date criado:', dt);
+          } else {
+            console.warn('❌ Agendamento com data ou hora ausente:', s);
+          }
+
+          const date = dt ? dt.toLocaleDateString('pt-BR') : 'FILHA DA PUTA';
+          const hour = dt ? dt.toLocaleTimeString('pt-BR') : 'Hora Inválida';
+
+          console.log('→ Data formatada:', date);
+          console.log('→ Hora formatada:', hour);
 
           const div = document.createElement('div');
           div.className = 'wash';
@@ -237,6 +283,7 @@
         });
 
       } catch (e) {
+        console.error('❌ Erro no loadScheduleAndHours:', e);
         alert(e.message);
       }
     }
@@ -246,7 +293,7 @@
     // ============================
 
     async function saveConfig() {
-      const hourInput = document.getElementById('available-hour').value.trim();
+      const hourInput = document.getElementById('available-hours').value.trim();
 
       if (!hourInput) {
         alert('Informe pelo menos um horário disponível.');
@@ -254,8 +301,6 @@
       }
 
       const hour = hourInput.split(',').map(h => h.trim());
-
-      console.log(hour);
 
       for (const h of hour) {
         const body = { hour: h };
@@ -271,31 +316,13 @@
           });
 
           if (!res.ok) throw new Error('Erro ao salvar horários');
-          alert('Horários salvos com sucesso!');
         } catch (e) {
           alert(e.message);
         }
       }
+
+      alert('Horários salvos com sucesso!');
     }
-
-    async function loadConfig() {
-      try {
-        const res = await fetch(`${API_URL}/public/getHours`, {
-          headers: { Authorization: `Bearer ${token}` } // pode remover se não precisar autenticação
-        });
-
-        if (!res.ok) throw new Error('Erro ao carregar horários');
-
-        const data = await res.json();
-        const hours = data.map(h => h.hour);
-
-        document.getElementById('available-hour').value = hours.join(', ');
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-
 
     // ==================
     // === LOGOUT =======
@@ -310,9 +337,11 @@
     // === INICIALIZA ===
     // ==================
 
-    fetchServices();
-    listScheduled();
-    loadConfig();
+    window.onload = () => {
+      fetchServices();
+      loadScheduleAndHours(); // Substitui listScheduled() + loadConfig()
+    };
+
   </script>
 
 
